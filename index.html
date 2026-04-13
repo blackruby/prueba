@@ -23,7 +23,8 @@
   <title>LaIsla</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260413" />
+  <link rel="stylesheet" href="styles.css?v=20260413b" />
+  <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -198,10 +199,16 @@
         <input class="terraza-admin-input" type="text" id="db-name-input" placeholder="Nombre de la BD" autocomplete="off" required />
         <input class="terraza-admin-input" type="url" id="db-url-input" placeholder="URL de Upstash" autocomplete="off" required />
         <input class="terraza-admin-input" type="text" id="db-token-input" placeholder="Token de Upstash" autocomplete="off" required />
-        <button class="modal-done-btn" type="submit">
-          <span class="material-icons-round">save</span>
-          Guardar BD
-        </button>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="modal-done-btn" onclick="scanQrCode()" style="flex:1;background:var(--surface2);color:var(--accent)">
+            <span class="material-icons-round">qr_code_scanner</span>
+            Escanear QR
+          </button>
+          <button class="modal-done-btn" type="submit" style="flex:1;">
+            <span class="material-icons-round">save</span>
+            Guardar BD
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -533,6 +540,6 @@
 
 </div>
 
-<script src="script.js?v=20260413"></script>
+<script src="script.js?v=20260413b"></script>
 </body>
 </html>

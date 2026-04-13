@@ -335,6 +335,7 @@ window.addEventListener('popstate', function(e) {
     if (state.modal === 'productos')   { cerrarModalBtn();     return; }
     if (state.modal === 'desglose')    { cerrarDesgloseBtn();  return; }
     if (state.modal === 'cruces')      { cerrarCrucesModalBtn(); return; }
+    if (state.modal === 'qr')          { closeQrScanner();     return; }
   }
 
   // Sin modal: si hay alguno abierto, cerrarlo (seguridad)
@@ -352,6 +353,9 @@ window.addEventListener('popstate', function(e) {
   }
   if (document.getElementById('modal-overlay').classList.contains('open')) {
     cerrarModalBtn(); return;
+  }
+  if (document.getElementById('qr-modal')) {
+    closeQrScanner(); return;
   }
 
   // Sin modales: navegar según pantalla
@@ -1741,4 +1745,102 @@ function cerrarCrucesModalBtn() {
 
 function cerrarCrucesModal(e) {
   if (e.target === document.getElementById('cruces-overlay')) cerrarCrucesModalBtn();
+}
+
+// ═══════════════════════════════════════════
+//  ESCANEO QR PARA BD
+// ═══════════════════════════════════════════
+
+var qrScanner = null;
+
+function scanQrCode() {
+  // Create QR scanner modal
+  var modal = document.createElement('div');
+  modal.id = 'qr-modal';
+  modal.className = 'modal-overlay';
+  modal.onclick = function(e) {
+    if (e.target === modal) closeQrScanner();
+  };
+  modal.innerHTML = `
+    <div class="modal-sheet" style="max-height:80vh;">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Escanear código QR</span>
+        <button class="modal-close" onclick="closeQrScanner()" title="Cerrar">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div style="padding:20px;text-align:center;">
+        <video id="qr-video" style="width:100%;max-width:300px;border-radius:12px;"></video>
+        <p style="margin-top:16px;color:var(--text-muted);font-size:14px;">
+          Apunta la cámara al código QR que contiene la configuración de la BD
+        </p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Initialize QR scanner
+  qrScanner = new QrScanner(
+    document.getElementById('qr-video'),
+    function(result) {
+      handleQrResult(result.data);
+    },
+    {
+      highlightScanRegion: true,
+      highlightCodeOutline: true,
+    }
+  );
+
+  // Start scanning
+  qrScanner.start().catch(function(err) {
+    console.error('Error starting QR scanner:', err);
+    alert('Error al acceder a la cámara: ' + err.message);
+    closeQrScanner();
+  });
+
+  modal.classList.add('open');
+  pushModalState('qr');
+
+  // Handle escape key
+  function handleQrEscape(e) {
+    if (e.key === 'Escape') {
+      closeQrScanner();
+    }
+  }
+  document.addEventListener('keydown', handleQrEscape);
+
+  // Store the handler to remove it later
+  modal._escapeHandler = handleQrEscape;
+}
+
+function handleQrResult(qrData) {
+  try {
+    var data = JSON.parse(qrData);
+    if (data.nombre && data.url && data.token) {
+      document.getElementById('db-name-input').value = data.nombre;
+      document.getElementById('db-url-input').value = data.url;
+      document.getElementById('db-token-input').value = data.token;
+      closeQrScanner();
+      alert('Configuración cargada del QR. Revisa los datos y pulsa "Guardar BD".');
+    } else {
+      alert('El código QR no contiene una configuración válida de BD. Debe incluir nombre, url y token.');
+    }
+  } catch (err) {
+    alert('Error al procesar el código QR. Asegúrate de que contiene un JSON válido.');
+  }
+}
+
+function closeQrScanner() {
+  if (qrScanner) {
+    qrScanner.stop();
+    qrScanner = null;
+  }
+  var modal = document.getElementById('qr-modal');
+  if (modal) {
+    if (modal._escapeHandler) {
+      document.removeEventListener('keydown', modal._escapeHandler);
+    }
+    modal.remove();
+  }
 }
