@@ -128,19 +128,55 @@ function deleteDbConfig(id) {
   if (!getSelectedDb()) showDbManager();
 }
 
+var visualViewportResizeHandler = null;
+
 function promptAddDb() {
   openDbFormModal();
 }
 
 function openDbFormModal() {
   document.getElementById('db-form').reset();
-  document.getElementById('db-form-overlay').classList.add('open');
-  document.getElementById('db-name-input').focus();
+  var overlay = document.getElementById('db-form-overlay');
+  var sheet = document.getElementById('db-form-sheet');
+  overlay.classList.add('open');
+  applyKeyboardAwareModal(sheet);
+
+  setTimeout(function() {
+    var nameInput = document.getElementById('db-name-input');
+    if (nameInput) {
+      nameInput.focus({ preventScroll: true });
+    }
+  }, 120);
+
   pushModalState('db-form');
 }
 
 function cerrarDbFormBtn() {
+  deactivateKeyboardAwareModal();
   document.getElementById('db-form-overlay').classList.remove('open');
+}
+
+function deactivateKeyboardAwareModal() {
+  if (window.visualViewport && visualViewportResizeHandler) {
+    window.visualViewport.removeEventListener('resize', visualViewportResizeHandler);
+    visualViewportResizeHandler = null;
+  }
+}
+
+function applyKeyboardAwareModal(sheet) {
+  if (!sheet) return;
+  if (window.visualViewport) {
+    deactivateKeyboardAwareModal();
+    visualViewportResizeHandler = function() {
+      var viewportHeight = window.visualViewport.height;
+      var maxHeight = Math.min(viewportHeight - 64, window.innerHeight * 0.92);
+      sheet.style.maxHeight = maxHeight + 'px';
+    };
+    window.visualViewport.addEventListener('resize', visualViewportResizeHandler);
+    visualViewportResizeHandler();
+  } else {
+    sheet.style.maxHeight = '92vh';
+  }
 }
 
 function cerrarDbForm(e) {

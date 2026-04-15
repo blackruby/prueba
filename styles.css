@@ -437,7 +437,15 @@ html, body {
 
 .modal-body {
   overflow-y: auto;
-  padding-bottom: 16px;
+  padding-bottom: calc(20px + env(keyboard-inset-height, 0px));
+}
+.db-form-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 16px;
+  margin-top: 8px;
+  background: var(--surface);
+  z-index: 1;
 }
 @keyframes slideUp {
   from { transform: translateY(100%); }
