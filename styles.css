@@ -439,6 +439,12 @@ html, body {
   overflow-y: auto;
   padding-bottom: calc(20px + env(keyboard-inset-height, 0px));
 }
+.modal-overlay.keyboard-open {
+  align-items: flex-start;
+}
+.modal-overlay.keyboard-open .modal-sheet {
+  margin-top: 16px;
+}
 .db-form-actions {
   position: sticky;
   bottom: 0;

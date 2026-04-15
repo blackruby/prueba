@@ -139,7 +139,7 @@ function openDbFormModal() {
   var overlay = document.getElementById('db-form-overlay');
   var sheet = document.getElementById('db-form-sheet');
   overlay.classList.add('open');
-  applyKeyboardAwareModal(sheet);
+  applyKeyboardAwareModal(overlay, sheet);
 
   setTimeout(function() {
     var nameInput = document.getElementById('db-name-input');
@@ -163,18 +163,25 @@ function deactivateKeyboardAwareModal() {
   }
 }
 
-function applyKeyboardAwareModal(sheet) {
-  if (!sheet) return;
+function applyKeyboardAwareModal(overlay, sheet) {
+  if (!overlay || !sheet) return;
   if (window.visualViewport) {
     deactivateKeyboardAwareModal();
     visualViewportResizeHandler = function() {
       var viewportHeight = window.visualViewport.height;
-      var maxHeight = Math.min(viewportHeight - 64, window.innerHeight * 0.92);
+      var keyboardGap = window.innerHeight - viewportHeight;
+      var maxHeight = Math.min(viewportHeight - 80, window.innerHeight * 0.92);
       sheet.style.maxHeight = maxHeight + 'px';
+      if (keyboardGap > 60 || viewportHeight < window.innerHeight * 0.9) {
+        overlay.classList.add('keyboard-open');
+      } else {
+        overlay.classList.remove('keyboard-open');
+      }
     };
     window.visualViewport.addEventListener('resize', visualViewportResizeHandler);
     visualViewportResizeHandler();
   } else {
+    overlay.classList.remove('keyboard-open');
     sheet.style.maxHeight = '92vh';
   }
 }
@@ -298,7 +305,6 @@ async function cargarDatos() {
     if (lbl) lbl.textContent = '+ ' + PRECIO_TERRAZA.toFixed(2).replace('.', ',') + ' € por producto';
 
     datosListos = true;
-    console.log('Datos cargados:', CLIENTES.length, 'clientes,', PRODUCTOS.length, 'productos');
 
     // Si el usuario ya estaba en la pantalla de nueva consumición, construir la tabla
     if (document.getElementById('screen-nueva').classList.contains('active')) {
@@ -617,7 +623,6 @@ function confirmarPago() {
     return r.json();
   })
   .then(function() {
-    console.log('Consumición guardada con clave:', clave);
     document.getElementById('pago-overlay').classList.remove('open');
     _datosPendientes = null;
     goHome();
@@ -1231,7 +1236,6 @@ function guardarProductos() {
   })
   .then(function() {
     PRODUCTOS = nuevos;
-    console.log('Productos guardados:', PRODUCTOS.length);
     goHome();
   })
   .catch(function(err) {
@@ -1347,7 +1351,6 @@ function guardarClientes() {
   })
   .then(function() {
     CLIENTES = nuevos;
-    console.log('Clientes guardados:', CLIENTES.length);
     goHome();
   })
   .catch(function(err) {
