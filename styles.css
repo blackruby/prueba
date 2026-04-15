@@ -411,7 +411,7 @@ html, body {
 
 /* ─── Modal ──────────────────────────────── */
 .modal-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,.55);
   z-index: 100;
@@ -422,14 +422,22 @@ html, body {
 .modal-overlay.open { display: flex; }
 
 .modal-sheet {
-  width: 100%;
+  width: min(100%, 480px);
+  max-width: 100%;
   background: var(--surface);
   border-radius: 24px 24px 0 0;
   padding-top: 12px;
-  max-height: 78vh;
+  max-height: min(calc(100dvh - 16px - env(keyboard-inset-height, 0px)), 92vh);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: slideUp .25s ease;
+  margin: 0 auto;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding-bottom: 16px;
 }
 @keyframes slideUp {
   from { transform: translateY(100%); }

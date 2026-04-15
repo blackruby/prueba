@@ -23,7 +23,7 @@
   <title>LaIsla</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260413c" />
+  <link rel="stylesheet" href="styles.css?v=20260415a" />
 </head>
 <body>
 <div id="app">
@@ -194,10 +194,10 @@
           <span class="material-icons-round">close</span>
         </button>
       </div>
-      <form id="db-form" class="modal-body" onsubmit="return submitDbForm(event)" style="display:flex;flex-direction:column;gap:12px;padding:0 20px 20px;">
-        <input class="terraza-admin-input" type="text" id="db-name-input" placeholder="Nombre de la BD" autocomplete="off" required />
-        <input class="terraza-admin-input" type="url" id="db-url-input" placeholder="URL de Upstash" autocomplete="off" required />
-        <input class="terraza-admin-input" type="text" id="db-token-input" placeholder="Token de Upstash" autocomplete="off" required />
+      <form id="db-form" class="modal-body" autocomplete="off" onsubmit="return submitDbForm(event)" style="display:flex;flex-direction:column;gap:12px;padding:0 20px 20px;">
+        <input class="terraza-admin-input" type="text" id="db-name-input" placeholder="Nombre de la BD" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
+        <input class="terraza-admin-input" type="url" id="db-url-input" placeholder="URL de Upstash" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
+        <input class="terraza-admin-input" type="text" id="db-token-input" placeholder="Token de Upstash" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
         <div style="display:flex;gap:8px;">
           <button type="button" class="modal-done-btn" onclick="scanQrCode()" style="flex:1;background:var(--surface2);color:var(--accent)">
             <span class="material-icons-round">qr_code_scanner</span>
