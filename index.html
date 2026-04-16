@@ -83,15 +83,6 @@
       <span class="material-icons-round btn-arrow">chevron_right</span>
     </button>
 
-    <button class="action-btn btn-terr" onclick="verTerraza()">
-      <div class="btn-icon"><span class="material-icons-round">deck</span></div>
-      <div class="btn-text">
-        <span class="btn-title">Terraza</span>
-        <span class="btn-desc">Establece el precio de terraza</span>
-      </div>
-      <span class="material-icons-round btn-arrow">chevron_right</span>
-    </button>
-
     <button class="action-btn btn-clis" onclick="showDbManager()">
       <div class="btn-icon"><span class="material-icons-round">storage</span></div>
       <div class="btn-text">
@@ -118,8 +109,13 @@
         </div>
         <div class="terraza-text">
           <div class="terraza-label">Terraza</div>
-          <div class="terraza-precio" id="terraza-precio-label">Cargando…</div>
         </div>
+        <input class="terraza-precio-input" type="number" id="terraza-precio-input"
+          min="0" step="0.1" inputmode="decimal" placeholder="0,00" disabled
+          onclick="event.stopPropagation()"
+          onchange="precioTerrazaActual = parseFloat(this.value) || 0; event.stopPropagation();"
+          onblur="precioTerrazaActual = parseFloat(this.value) || 0;" />
+        <span class="terraza-euro" id="terraza-euro">€</span>
       </div>
 
       <!-- Tabla de clientes (scroll solo aquí) -->
@@ -518,28 +514,6 @@
         <button class="terraza-save-btn" onclick="promptAddDb()" style="margin-top:4px;">
           <span class="material-icons-round">add</span>
           Nueva BD
-        </button>
-      </div>
-      <div class="admin-footer"></div>
-    </div>
-  </div>
-
-  <div id="screen-terraza" class="screen admin-screen">
-    <div class="inner-screen">
-      <div class="screen-header">
-        <span class="material-icons-round" style="color:#60d4b0">deck</span>
-        <h2 id="title-terraza">Terraza</h2>
-      </div>
-      <div class="terraza-admin-card">
-        <div class="terraza-admin-label">Precio por producto en terraza</div>
-        <div class="terraza-admin-row">
-          <input class="terraza-admin-input" type="number" id="terraza-admin-input"
-            min="0" step="0.1" inputmode="decimal" placeholder="0,00" />
-          <span style="font-size:20px;font-weight:900;color:var(--text-muted)">€</span>
-        </div>
-        <button class="terraza-save-btn" onclick="guardarTerraza()">
-          <span class="material-icons-round">save</span>
-          Guardar
         </button>
       </div>
       <div class="admin-footer"></div>

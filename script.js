@@ -14,6 +14,8 @@ var dbShareTargetId = null;
 var CLIENTES  = [];
 var PRODUCTOS = [];
 var PRECIO_TERRAZA = 0;
+var precioTerrazaOriginal = 0;
+var precioTerrazaActual = 0;
 
 function loadDbConfigs() {
   try {
@@ -377,15 +379,10 @@ async function cargarDatos() {
     if (!Array.isArray(PRODUCTOS) || PRODUCTOS.length === 0)
       throw new Error('El array de productos está vacío');
 
-    // Actualizar label de terraza con el precio cargado
-    var lbl = document.getElementById('terraza-precio-label');
-    if (lbl) lbl.textContent = '+ ' + PRECIO_TERRAZA.toFixed(2).replace('.', ',') + ' € por producto';
-
     datosListos = true;
 
-    // Si el usuario ya estaba en la pantalla de nueva consumición, construir la tabla
     if (document.getElementById('screen-nueva').classList.contains('active')) {
-      construirTablaClientes();
+      nuevaConsumicion();
     }
 
   } catch(err) {
@@ -490,14 +487,16 @@ window.addEventListener('popstate', function(e) {
 
 function toggleTerraza() {
   terrazaActiva = !terrazaActiva;
-  document.getElementById('terraza-toggle').classList.toggle('checked', terrazaActiva);
+  var toggle = document.getElementById('terraza-toggle');
+  var input = document.getElementById('terraza-precio-input');
+  toggle.classList.toggle('checked', terrazaActiva);
+  input.disabled = !terrazaActiva;
+  if (terrazaActiva) {
+    input.focus();
+  }
 }
 
 function construirTablaClientes() {
-  // Resetear terraza al abrir
-  terrazaActiva = false;
-  document.getElementById('terraza-toggle').classList.remove('checked');
-
   importes = {};
   CLIENTES.forEach(function(c) { importes[c.id] = 0; });
 
@@ -530,12 +529,37 @@ function nuevaConsumicion() {
   showScreen('screen-nueva', 'nav-nueva');
 
   if (!datosListos) {
-    // Los datos aún se están cargando; el callback en cargarDatos() construirá la tabla cuando terminen
     mostrarEstadoCarga('Cargando datos…', false);
     return;
   }
 
-  construirTablaClientes();
+  dbFetch('/get/terraza')
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d) {
+      precioTerrazaActual = parseFloat(d.result) || 0;
+      precioTerrazaOriginal = precioTerrazaActual;
+    })
+    .catch(function() {
+      precioTerrazaActual = 0;
+      precioTerrazaOriginal = 0;
+    })
+    .finally(function() {
+      resetearTerrazaUI();
+      construirTablaClientes();
+    });
+}
+
+function resetearTerrazaUI() {
+  terrazaActiva = false;
+  var toggle = document.getElementById('terraza-toggle');
+  var input = document.getElementById('terraza-precio-input');
+  toggle.classList.remove('checked');
+  input.disabled = true;
+  if (precioTerrazaActual > 0) {
+    input.value = precioTerrazaActual.toFixed(2);
+  } else {
+    input.value = '';
+  }
 }
 
 function onImporteChange(clienteId, valor) {
@@ -719,6 +743,11 @@ function confirmarConsumicion() {
     return;
   }
 
+  if (terrazaActiva) {
+    var inputPrecio = document.getElementById('terraza-precio-input');
+    precioTerrazaActual = parseFloat(inputPrecio.value) || 0;
+  }
+
   var total = 0;
   Object.keys(importes).forEach(function(k) { total += importes[k]; });
   var datos = {
@@ -728,8 +757,27 @@ function confirmarConsumicion() {
     }),
     total: total
   };
-  guardarConsumicion(datos);
-  // goHome() lo llamará confirmarPago() tras guardar en Redis
+
+  if (terrazaActiva && precioTerrazaActual !== precioTerrazaOriginal) {
+    dbFetch('/set/terraza', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(precioTerrazaActual)
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function() {
+      PRECIO_TERRAZA = precioTerrazaActual;
+      precioTerrazaOriginal = precioTerrazaActual;
+    })
+    .catch(function(err) {
+      console.error('Error guardando precio terraza:', err);
+    })
+    .finally(function() {
+      guardarConsumicion(datos);
+    });
+  } else {
+    guardarConsumicion(datos);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -737,6 +785,10 @@ function confirmarConsumicion() {
 // ═══════════════════════════════════════════
 
 function abrirModal(clienteId) {
+  if (terrazaActiva) {
+    var inputPrecio = document.getElementById('terraza-precio-input');
+    precioTerrazaActual = parseFloat(inputPrecio.value) || 0;
+  }
   clienteActivoId = clienteId;
   modalCounts = {};
 
@@ -796,7 +848,7 @@ function cambiarCantidad(prodId, delta, event) {
   modalCounts[prodId] = nueva;
 
   // Precio por unidad: producto + terraza si está activa
-  var precioPorUd = prod.precio + (terrazaActiva ? PRECIO_TERRAZA : 0);
+  var precioPorUd = prod.precio + (terrazaActiva ? precioTerrazaActual : 0);
   importes[clienteActivoId] = Math.round(Math.max(0,
     (importes[clienteActivoId] || 0) + diff * precioPorUd
   ) * 100) / 100;
@@ -1437,39 +1489,8 @@ function guardarClientes() {
 }
 
 // ─── Terraza ─────────────────────────────────
-
-function verTerraza() {
-  showScreen('screen-terraza', 'nav-home');
-  document.getElementById('terraza-admin-input').value =
-    PRECIO_TERRAZA > 0 ? PRECIO_TERRAZA.toFixed(2) : '';
-}
-
-function guardarTerraza() {
-  var nuevo = parseFloat(document.getElementById('terraza-admin-input').value) || 0;
-
-  dbFetch('/set/terraza', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(nuevo)
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  })
-  .then(function() {
-    PRECIO_TERRAZA = nuevo;
-    // Actualizar también el label de la pantalla de nueva consumición
-    var lbl = document.getElementById('terraza-precio-label');
-    if (lbl) lbl.textContent = '+ ' + PRECIO_TERRAZA.toFixed(2).replace('.', ',') + ' € por producto';
-    goHome();
-  })
-  .catch(function(err) {
-    console.error('Error guardando terraza:', err);
-    alert('Error al guardar: ' + err.message);
-  });
-}
+// Funciones verTerraza() y guardarTerraza() eliminadas
+// El precio de terraza ahora se gestiona en Nueva consumición
 
 function rellenaEstadistica(tabla, historial) {
   var balance = {};

@@ -156,7 +156,6 @@ html, body {
 .btn-stats .btn-icon { background: rgba(245,180,80,.2);  color: #f5b450; }
 .btn-prods .btn-icon { background: rgba(80,160,245,.2);  color: #60b0f5; }
 .btn-clis  .btn-icon { background: rgba(245,100,160,.2); color: #f580b0; }
-.btn-terr  .btn-icon { background: rgba(100,210,180,.2); color: #60d4b0; }
 
 .btn-new   { box-shadow: 0 4px 24px rgba(124,110,245,.15); }
 
@@ -292,6 +291,30 @@ html, body {
   font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 1px;
 }
 .terraza-toggle.checked .terraza-precio { color: var(--accent-light); }
+.terraza-precio-input {
+  width: 60px;
+  background: var(--surface2);
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: var(--accent-light);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 8px;
+  text-align: right;
+}
+.terraza-precio-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.terraza-precio-input:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.terraza-euro {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text-muted);
+}
 
 .clientes-table {
   width: 100%;
