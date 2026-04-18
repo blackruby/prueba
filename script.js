@@ -709,8 +709,7 @@ function confirmarPago() {
     pad(ahora.getMonth() + 1) +
     pad(ahora.getDate()) +
     pad(ahora.getHours()) +
-    pad(ahora.getMinutes()) +
-    pad(ahora.getSeconds());
+    pad(ahora.getMinutes());
 
   var consumiciones = _datosPendientes.clientes
     .filter(function(c) { return c.importe > 0; })
