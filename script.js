@@ -284,7 +284,7 @@ function renderDbManager() {
         '<div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + nameHtml + '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-        '<button class="fab-btn fab-cancel" style="padding:10px 12px;min-width:auto;font-size:12px;" onclick="selectDb(\'' + db.id + '\')">' +
+        '<button class="fab-btn fab-cancel" style="padding:10px 12px;min-width:auto;font-size:12px;' + (String(DB_DEFAULT_ID) === String(db.id) ? 'background:#50c8a0;color:#fff;' : '') + '" onclick="selectDb(\'' + db.id + '\')">' +
           (String(DB_DEFAULT_ID) === String(db.id) ? 'Activa' : 'Seleccionar') +
         '</button>' +
         '<button class="fab-btn" style="background:rgba(240,112,112,.15);color:#f07070;padding:10px 12px;min-width:auto;font-size:12px;" onclick="deleteDbConfig(\'' + db.id + '\')">' +
