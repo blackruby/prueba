@@ -114,6 +114,11 @@ function addDbConfig(name, url, token, admin) {
     alert('Nombre, URL y token son obligatorios.');
     return null;
   }
+  var existe = DB_CONFIGS.some(function(d) { return d.name.toLowerCase() === trimmedName.toLowerCase(); });
+  if (existe) {
+    alert('Ya existe una BD con ese nombre.');
+    return null;
+  }
   var id = String(Date.now());
   DB_CONFIGS.push({ id: id, name: trimmedName, url: trimmedUrl, token: trimmedToken, admin: admin === true });
   saveDbConfigs();
