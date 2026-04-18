@@ -53,9 +53,12 @@ function updateAdminVisibility() {
   var btnProds = document.getElementById('btn-productos');
   var btnClis = document.getElementById('btn-clientes');
   var btnBorrarComanda = document.getElementById('btn-borrar-comanda');
-  if (btnProds) btnProds.style.display = isAdmin ? '' : 'none';
+  if (btnProds) btnProds.style.display = '';
   if (btnClis) btnClis.style.display = isAdmin ? '' : 'none';
   if (btnBorrarComanda) btnBorrarComanda.style.display = isAdmin ? '' : 'none';
+
+  var datetimeInput = document.getElementById('pago-datetime-input');
+  if (datetimeInput) datetimeInput.disabled = !isAdmin;
 }
 
 function dbFetch(path, options) {
