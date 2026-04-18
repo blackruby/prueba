@@ -185,13 +185,13 @@
     <div class="modal-sheet" id="db-form-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <span class="modal-title">Nueva BD</span>
+        <span class="modal-title">Nuevo Origen</span>
         <button class="modal-close" onclick="cerrarDbFormBtn()" title="Cerrar">
           <span class="material-icons-round">close</span>
         </button>
       </div>
       <form id="db-form" class="modal-body" autocomplete="off" onsubmit="return submitDbForm(event)" style="display:flex;flex-direction:column;gap:12px;padding:0 20px 20px;">
-        <input class="terraza-admin-input" type="text" id="db-name-input" placeholder="Nombre de la BD" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
+        <input class="terraza-admin-input" type="text" id="db-name-input" placeholder="Nombre" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
         <input class="terraza-admin-input" type="url" id="db-url-input" placeholder="URL de Upstash" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
         <input class="terraza-admin-input" type="text" id="db-token-input" placeholder="Token de Upstash" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" required />
         <div class="db-form-actions" style="display:flex;gap:8px;">
@@ -201,7 +201,7 @@
           </button>
           <button class="modal-done-btn" type="submit" style="flex:1;">
             <span class="material-icons-round">save</span>
-            Guardar BD
+            Guardar
           </button>
         </div>
       </form>
@@ -212,7 +212,7 @@
     <div class="modal-sheet" id="db-share-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <span class="modal-title">Compartir BD</span>
+        <span class="modal-title">Compartir Origen</span>
         <button class="modal-close" onclick="cerrarDbShareFormBtn()" title="Cerrar">
           <span class="material-icons-round">close</span>
         </button>
@@ -510,14 +510,14 @@
     <div class="inner-screen">
       <div class="screen-header">
         <span class="material-icons-round" style="color:#a89ef9">storage</span>
-        <h2>Gestión de BD</h2>
+        <h2>Origen de datos</h2>
       </div>
       <div class="terraza-admin-card" style="padding:22px 20px;gap:16px;">
         <div class="terraza-admin-label">Bases de datos configuradas</div>
         <div id="db-list" style="display:flex;flex-direction:column;gap:10px;max-height:48vh;overflow:auto;padding-right:4px;"></div>
         <button class="terraza-save-btn" onclick="promptAddDb()" style="margin-top:4px;">
           <span class="material-icons-round">add</span>
-          Nueva BD
+          Nuevo Origen
         </button>
       </div>
       <div class="admin-footer"></div>

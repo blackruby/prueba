@@ -60,7 +60,7 @@ function updateAdminVisibility() {
 
 function dbFetch(path, options) {
   var db = getSelectedDb();
-  if (!db) throw new Error('No hay BD seleccionada. Ve a Gestión de BD.');
+  if (!db) throw new Error('No hay BD seleccionada. Ve a Origen de datos.');
   var url = db.url.replace(/\/+$/, '') + path;
   options = options || {};
   options.headers = options.headers || {};
@@ -98,7 +98,6 @@ function selectDb(id) {
   .catch(function(err) {
     // Connection failed, revert and show error
     currentDb = oldCurrent;
-    console.error('Error conectando a BD:', err);
     alert('Error de conexión con la BD: ' + err.message + '. No se pudo seleccionar.');
     mostrarEstadoCarga('', false); // Clear loading message
   });
@@ -271,7 +270,7 @@ function renderDbManager() {
   if (!list) return;
   list.innerHTML = '';
   if (DB_CONFIGS.length === 0) {
-    list.innerHTML = '<div style="color:var(--text-muted);font-size:14px;">No hay BD configuradas.</div>';
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:14px;">No hay ningún origen configurado.</div>';
     return;
   }
   DB_CONFIGS.forEach(function(db) {
@@ -2033,7 +2032,7 @@ function handleQrResult(qrData) {
       document.getElementById('db-token-input').value = data.token;
       dbFormAdminValue = data.admin === true;
       closeQrScanner();
-      alert('Configuración cargada del QR. Revisa los datos y pulsa "Guardar BD".');
+      alert('Configuración cargada del QR. Revisa los datos y pulsa "Guardar".');
     } else {
       alert('El código QR no contiene una configuración válida de BD. Debe incluir nombre, url y token.');
     }
