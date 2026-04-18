@@ -673,7 +673,13 @@ async function guardarConsumicion(datos) {
   var ahora = new Date();
   var pad = function(n) { return String(n).padStart(2, '0'); };
   var localIso = ahora.getFullYear() + '-' + pad(ahora.getMonth() + 1) + '-' + pad(ahora.getDate()) + 'T' + pad(ahora.getHours()) + ':' + pad(ahora.getMinutes());
-  document.getElementById('pago-datetime-input').value = localIso;
+  var datetimeInput = document.getElementById('pago-datetime-input');
+  datetimeInput.value = localIso;
+  datetimeInput.onblur = function() {
+    if (!datetimeInput.value) {
+      datetimeInput.value = localIso;
+    }
+  };
   var historial = [];
   try {
     historial = await obtenerHistorial();
