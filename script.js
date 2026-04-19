@@ -143,7 +143,10 @@ function submitDbForm(e) {
 }
 
 function deleteDbConfig(id) {
-  DB_CONFIGS = DB_CONFIGS.filter(function(db) { return String(db.id) !== String(id); });
+  var db = DB_CONFIGS.find(function(d) { return String(d.id) === String(id); });
+  if (!db) return;
+  if (!confirm('¿Eliminar la base de datos "' + db.name + '"?')) return;
+  DB_CONFIGS = DB_CONFIGS.filter(function(d) { return String(d.id) !== String(id); });
   if (String(DB_DEFAULT_ID) === String(id)) {
     DB_DEFAULT_ID = null;
     currentDb = null;
@@ -282,23 +285,22 @@ function renderDbManager() {
     return;
   }
   DB_CONFIGS.forEach(function(db) {
+    var isActive = String(DB_DEFAULT_ID) === String(db.id);
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;background:var(--surface2);gap:12px;';
-    var nameHtml = db.admin
-      ? '<button class="db-name-link" onclick="promptShareDbQr(\'' + db.id + '\')">' + db.name + '</button>'
-      : '<div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + db.name + '</div>';
+    row.style.cssText = 'display:flex;align-items:center;padding:14px 16px;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;background:var(--surface2);gap:12px;';
+    var nameHtml = '<div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;" onclick="selectDb(\'' + db.id + '\')">' + db.name + '</div>';
+    var qrBtn = db.admin
+      ? '<button class="fab-btn" style="background:var(--surface);color:var(--text);padding:0;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="promptShareDbQr(\'' + db.id + '\')" title="Compartir QR">' +
+          '<span class="material-icons-round" style="font-size:18px;">qr_code</span>' +
+        '</button>'
+      : '';
     row.innerHTML =
-      '<div style="min-width:0;flex:1;">' +
-        '<div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + nameHtml + '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-        '<button class="fab-btn fab-cancel" style="padding:10px 12px;min-width:auto;font-size:12px;' + (String(DB_DEFAULT_ID) === String(db.id) ? 'background:#50c8a0;color:#fff;' : '') + '" onclick="selectDb(\'' + db.id + '\')">' +
-          (String(DB_DEFAULT_ID) === String(db.id) ? 'Activa' : 'Seleccionar') +
-        '</button>' +
-        '<button class="fab-btn" style="background:rgba(240,112,112,.15);color:#f07070;padding:10px 12px;min-width:auto;font-size:12px;" onclick="deleteDbConfig(\'' + db.id + '\')">' +
-          'Eliminar' +
-        '</button>' +
-      '</div>';
+      '<input type="radio" name="db-active" style="width:20px;height:20px;accent-color:#50c8a0;flex-shrink:0;" ' + (isActive ? 'checked' : '') + ' onchange="selectDb(\'' + db.id + '\')" />' +
+      '<div style="min-width:0;flex:1;">' + nameHtml + '</div>' +
+      '<div style="display:flex;gap:8px;">' + qrBtn +
+      '<button class="fab-btn" style="background:rgba(240,112,112,.15);color:#f07070;padding:0;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="deleteDbConfig(\'' + db.id + '\')" title="Eliminar">' +
+        '<span class="material-icons-round">delete</span>' +
+      '</button></div>';
     list.appendChild(row);
   });
 }
