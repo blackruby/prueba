@@ -1,8 +1,8 @@
-# AGENTS.md — LaIsla
+# AGENTS.md — QuiénPaga
 
 ## Project Overview
 
-LaIsla is a single-page PWA for managing bar/restaurant consumptions ("comandas"), payments, and statistics. It runs entirely in the browser with no build step.
+QuiénPaga is a single-page PWA for managing bar/restaurant consumptions ("comandas"), payments, and statistics. It runs entirely in the browser with no build step.
 
 - **Language**: Vanilla ES5/ES6 JavaScript (no TypeScript, no modules)
 - **Styling**: Plain CSS with CSS custom properties
@@ -12,7 +12,7 @@ LaIsla is a single-page PWA for managing bar/restaurant consumptions ("comandas"
 
 ## Build / Run / Test
 
-There is no build system. To run the app:
+There is no build system. No linting or testing is configured.
 
 ```bash
 # Serve locally (any static server works)
@@ -22,14 +22,12 @@ npx serve .
 open index.html
 ```
 
-No test suite exists. No linting is configured.
-
 ## File Structure
 
 ```
 index.html      — HTML shell + all screen/modal markup (no JS)
-script.js       — All application logic (~1800 lines, single file)
-styles.css      — All styles (~1170 lines, CSS custom properties)
+script.js       — All application logic (~2200 lines, single file)
+styles.css      — All styles (~1200 lines, CSS custom properties)
 manifest.json   — PWA manifest
 ```
 
@@ -41,12 +39,14 @@ manifest.json   — PWA manifest
 - **No semi-colons required** but existing code uses them inconsistently; match the surrounding file.
 - **No linter/formatter** enforced; keep changes consistent with existing style in the file.
 - Section headers use box-drawing characters: `// ═══════════════════════════════════════════`.
+- Use 2-space indentation in JS/HTML, match existing files.
 
 ### Variables & State
 
 - Use `var` for function-scope globals; use `let`/`const` for block-scope inside functions.
 - Global state lives at the top of `script.js` (e.g., `CLIENTES`, `PRODUCTOS`, `importes`).
 - Private/ephemeral state prefixed with `_` (e.g., `_datosPendientes`, `_comandaActivaKey`).
+- Boolean flags: use `isXxx`, `hasXxx`, `enableXxx` prefix pattern.
 
 ### Naming Conventions
 
@@ -55,6 +55,7 @@ manifest.json   — PWA manifest
 - **DOM element IDs**: `kebab-case` (match `id="clientes-tbody"` in HTML)
 - **CSS classes**: `kebab-case` (match `.clientes-table`, `.fab-btn`)
 - **Language**: Spanish for function/variable names and comments; English for technical terms.
+- **Event handlers**: `onXxx` prefix for DOM onclick handlers defined in HTML.
 
 ### HTML & DOM
 
@@ -70,6 +71,7 @@ manifest.json   — PWA manifest
 - Use CSS custom properties defined in `:root` (e.g., `--accent`, `--surface`).
 - Class naming: utility-ish, e.g., `.fab-btn`, `.fab-confirm`, `.action-btn`.
 - Prefer class selectors over inline styles for anything reusable.
+- Use `var(--property)` for colors/spacing, avoid hardcoded values.
 
 ### Async / Promises
 
@@ -77,24 +79,27 @@ manifest.json   — PWA manifest
 - Wrap `fetch` calls in a `dbFetch` helper that adds auth headers automatically.
 - Always `.catch` network errors; show user-friendly feedback via `alert` or the `mostrarEstadoCarga` pattern.
 - Do not leave unhandled promise rejections.
+- Avoid async in tight loops; fetch once, process locally.
 
 ### Error Handling
 
 - Network errors: `console.error` + user `alert` or inline status message.
 - Validation errors: `alert` for user-facing, early `return` for guard clauses.
 - Parse errors (`JSON.parse`): wrap in `try/catch`, fall back to defaults.
+- Always validate user input before sending to backend.
 
 ### Performance
 
 - Avoid touching the DOM inside tight loops — build strings or use `documentFragment`.
 - `innerHTML` assignment is acceptable for full-replacement of dynamic content.
 - Use `requestAnimationFrame` or CSS animations for transitions; avoid JS-driven animations.
+- Cache DOM references when used multiple times.
 
-### PWA / Extension
+### Security
 
-- `manifest.json` defines PWA metadata (name, icons, theme).
-- Icons are static PNGs; no icon generation needed.
-- The app works offline once loaded (no service worker beyond basic PWA).
+- Never expose secrets/keys in console.log or user-visible places.
+- Validate all user input before processing.
+- Sanitize HTML strings when dynamically created.
 
 ## Adding New Features
 
@@ -135,4 +140,12 @@ dbFetch('/get/productos')
 **Guard clause for no DB selected:**
 ```js
 if (!getSelectedDb()) { showDbManager(); return; }
+```
+
+**Drag & drop reorder (as used in clientes/productos):**
+```js
+// Add draggable attr: tr.draggable = true for id !== 0
+// Use _dragSrc global to track dragged row
+// Add dragstart, dragover, drop event listeners
+// For mobile, add touchstart/touchmove/touchend on handle element
 ```

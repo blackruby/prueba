@@ -1,6 +1,6 @@
 {
-  "name": "LaIsla",
-  "short_name": "LaIsla",
+  "name": "QuiénPaga",
+  "short_name": "QuiénPaga",
   "description": "Control de consumiciones",
   "start_url": "./index.html",
   "display": "standalone",
