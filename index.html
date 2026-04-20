@@ -273,9 +273,18 @@
   <!-- ── SCREEN: HISTÓRICO ── -->
   <div id="screen-historico" class="screen">
     <div class="inner-screen" style="padding:16px 20px 0;overflow:hidden;flex:1;display:flex;flex-direction:column;gap:12px">
-      <div class="screen-header">
+      <div class="screen-header" style="position:relative">
         <span class="material-icons-round" style="color:#50c8a0">history</span>
         <h2 id="title-historico">Histórico</h2>
+        <button id="btn-hist-menu" class="hist-menu-btn" style="display:none" onclick="toggleHistMenu()">
+          <span class="material-icons-round">more_vert</span>
+        </button>
+        <div id="hist-menu" class="hist-dropdown" style="display:none">
+          <div class="hist-dropdown-item" onclick="copiaSeguridad()">Copia de seguridad</div>
+          <div class="hist-dropdown-item" onclick="restaurarCopia()">Restaurar copia</div>
+          <div class="hist-dropdown-item" onclick="colapsarHistorico()">Colapsar histórico</div>
+          <div class="hist-dropdown-item" style="color:#f07070" onclick="borrarHistorico()">Borrar histórico</div>
+        </div>
       </div>
       <div id="hist-loading" class="stats-loading">
         <span class="material-icons-round" style="font-size:18px;opacity:.6">sync</span>
@@ -315,6 +324,23 @@
       <div id="hist-list-body" style="display:flex;flex-direction:column;gap:8px"></div>
       <button class="pago-btn pago-btn-cancel" style="width:100%" onclick="cerrarHistListBtn()">
         <span class="material-icons-round">close</span>Cerrar
+      </button>
+    </div>
+  </div>
+
+  <!-- ── MODAL: BORRAR HISTÓRICO ── -->
+  <div id="hist-borrar-overlay" class="pago-overlay" onclick="cerrarHistBorrarBtn()">
+    <div class="pago-dialog" style="gap:16px" onclick="event.stopPropagation()">
+      <div class="pago-dialog-header">
+        <div class="pago-dialog-icon">⚠️</div>
+        <div class="pago-dialog-title">¿Qué desea borrar?</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="btn-borrar-comandas" class="fab-btn" onclick="borrarHistoricoConfirmar(1)">Comandas</button>
+        <button id="btn-borrar-todo" class="fab-btn" onclick="borrarHistoricoConfirmar(2)">Todo</button>
+      </div>
+      <button class="pago-btn pago-btn-cancel" style="width:100%" onclick="cerrarHistBorrarBtn()">
+        <span class="material-icons-round">close</span>Cancelar
       </button>
     </div>
   </div>

@@ -62,9 +62,11 @@ function updateAdminVisibility() {
   var btnProds = document.getElementById('btn-productos');
   var btnClis = document.getElementById('btn-clientes');
   var btnBorrarComanda = document.getElementById('btn-borrar-comanda');
+  var btnHistMenu = document.getElementById('btn-hist-menu');
   if (btnProds) btnProds.style.display = '';
   if (btnClis) btnClis.style.display = isAdmin ? '' : 'none';
   if (btnBorrarComanda) btnBorrarComanda.style.display = isAdmin ? '' : 'none';
+  if (btnHistMenu) btnHistMenu.style.display = isAdmin ? '' : 'none';
 
   var datetimeInput = document.getElementById('pago-datetime-input');
   if (datetimeInput) datetimeInput.disabled = !isAdmin;
@@ -636,7 +638,7 @@ var _datosPendientes = null;
 // Obtiene todas las claves que empiezan por "0" y devuelve un array
 // con el valor (objeto) de cada una de ellas
 function obtenerHistorial() {
-  // KEYS * trae todas las claves de golpe; filtramos las que empiezan por "0"
+  // KEYS * trae todas las claves de golpe; filtramos las que empiezan por número
   return dbFetch('/keys/*')
   .then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -2170,3 +2172,225 @@ function closeQrScanner() {
     loadingBtn.innerHTML = '<span class="material-icons-round">qr_code_scanner</span> Escanear QR';
   }
 }
+
+function toggleHistMenu() {
+  var menu = document.getElementById('hist-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function cerrarHistMenu() {
+  document.getElementById('hist-menu').style.display = 'none';
+}
+
+function copiaSeguridad() {
+  cerrarHistMenu();
+  var db = getSelectedDb();
+  if (!db) {
+    alert('No hay base de datos seleccionada');
+    return;
+  }
+
+  var nombre = db.name || db.nombre || 'backup';
+  var ahora = new Date();
+  var pad = function(n) { return String(n).padStart(2, '0'); };
+  var fecha = ahora.toISOString().split('T')[0];
+  var hora = pad(ahora.getHours()) + pad(ahora.getMinutes());
+
+  document.getElementById('hist-loading').style.display = 'flex';
+  document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;opacity:.6;animation:spin 1s linear infinite">sync</span>Generando copia…';
+
+  dbFetch('/keys/*')
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(data) {
+    var claves = data.result || [];
+    if (claves.length === 0) throw new Error('No hay datos para exportar');
+
+    return dbFetch('/mget/' + claves.join('/')).then(function(r) { return r.json(); }).then(function(mdata) {
+      return { claves: claves, mdata: mdata };
+    });
+  })
+  .then(function(data) {
+    var claves = data.claves;
+    var mdata = data.mdata;
+    var backup = {};
+    claves.forEach(function(key, i) {
+      var val = mdata.result[i];
+      if (val && typeof val === 'string') {
+        try { val = JSON.parse(val); } catch(e) {}
+      }
+      backup[key] = val;
+    });
+
+    var json = JSON.stringify(backup, null, 2);
+    var blob = new Blob([json], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = nombre + '-' + fecha + '-' + hora + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#50c8a0">✓ Copia generada</span>';
+    setTimeout(function() {
+      document.getElementById('hist-loading').innerHTML = '';
+    }, 2000);
+  })
+  .catch(function(err) {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
+  });
+}
+
+function restaurarCopia() {
+  cerrarHistMenu();
+  var db = getSelectedDb();
+  if (!db) {
+    alert('No hay base de datos seleccionada');
+    return;
+  }
+
+  document.getElementById('hist-loading').style.display = 'flex';
+  document.getElementById('hist-loading').innerHTML = '<span>Selecciona el archivo de copia de seguridad</span>';
+
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) {
+      document.getElementById('hist-loading').innerHTML = '';
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+      var datos;
+      try {
+        datos = JSON.parse(evt.target.result);
+      } catch(err) {
+        document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Archivo inválido</span>';
+        return;
+      }
+
+      var claves = Object.keys(datos);
+      if (claves.length === 0) {
+        document.getElementById('hist-loading').innerHTML = '<span style="opacity:.5">Sin datos para importar</span>';
+        return;
+      }
+
+      var confirmar = confirm('Se importarán ' + claves.length + ' elementos.\n\n¿Continuar?');
+      if (!confirmar) {
+        document.getElementById('hist-loading').innerHTML = '';
+        return;
+      }
+
+      document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;animation:spin 1s linear infinite">sync</span>Importando…';
+
+      var promises = claves.map(function(key) {
+        var valor = datos[key];
+        return dbFetch('/set/' + key, {
+          method: 'POST',
+          body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+        });
+      });
+
+      Promise.all(promises)
+      .then(function() {
+        document.getElementById('hist-loading').innerHTML = '<span style="color:#50c8a0">✓ importados ' + claves.length + ' elementos</span>';
+        setTimeout(function() {
+          verHistorico();
+        }, 1500);
+      })
+      .catch(function(err) {
+        document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
+      });
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function colapsarHistorico() {
+  cerrarHistMenu();
+  alert('Colapsar histórico: función en desarrollo');
+}
+
+var _histClavesBorrar = [];
+
+function borrarHistorico() {
+  cerrarHistMenu();
+  var db = getSelectedDb();
+  if (!db) {
+    alert('No hay base de datos seleccionada');
+    return;
+  }
+
+  document.getElementById('hist-loading').style.display = 'flex';
+  document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;opacity:.6;animation:spin 1s linear infinite">sync</span>Cargando…';
+
+  dbFetch('/keys/*')
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(data) {
+    var claves = (data.result || []).filter(function(k) {
+      return k.charAt(0) >= '0' && k.charAt(0) <= '9';
+    });
+    _histClavesBorrar = {
+      comandas: claves,
+      todo: data.result || []
+    };
+
+    document.getElementById('hist-loading').style.display = 'none';
+    document.getElementById('hist-borrar-overlay').classList.add('open');
+  })
+  .catch(function(err) {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
+  });
+}
+
+function borrarHistoricoConfirmar(opcion) {
+  document.getElementById('hist-borrar-overlay').classList.remove('open');
+
+  var clavesBorrar = opcion === 1 ? _histClavesBorrar.comandas : _histClavesBorrar.todo;
+
+  if (!clavesBorrar || clavesBorrar.length === 0) {
+    alert('No hay datos para borrar');
+    return;
+  }
+
+  var tipo = opcion === 1 ? 'comandas' : 'todo';
+  var confirmar = confirm('Se borrarán ' + clavesBorrar.length + ' elementos (' + tipo + ').\n\n¿Continuar? Esta acción no se puede deshacer.');
+  if (!confirmar) return;
+
+  document.getElementById('hist-loading').style.display = 'flex';
+  document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;animation:spin 1s linear infinite">sync</span>Borrando…';
+
+  var promises = clavesBorrar.map(function(key) {
+    return dbFetch('/del/' + key, { method: 'POST' });
+  });
+
+  Promise.all(promises)
+  .then(function() {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#50c8a0">✓ Borrado completado</span>';
+    setTimeout(function() {
+      verHistorico();
+    }, 1500);
+  })
+  .catch(function(err) {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
+  });
+}
+
+function cerrarHistBorrarBtn() {
+  document.getElementById('hist-borrar-overlay').classList.remove('open');
+  document.getElementById('hist-loading').innerHTML = '';
+}
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('hist-menu');
+  var btn = document.querySelector('.hist-menu-btn');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
