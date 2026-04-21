@@ -2243,6 +2243,8 @@ function copiaSeguridad() {
   });
 }
 
+var _histDatosRestaurar = null;
+
 function restaurarCopia() {
   cerrarHistMenu();
   var db = getSelectedDb();
@@ -2251,65 +2253,144 @@ function restaurarCopia() {
     return;
   }
 
-  document.getElementById('hist-loading').style.display = 'flex';
-  document.getElementById('hist-loading').innerHTML = '<span>Selecciona el archivo de copia de seguridad</span>';
-
   var input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
   input.onchange = function(e) {
     var file = e.target.files[0];
-    if (!file) {
-      document.getElementById('hist-loading').innerHTML = '';
-      return;
-    }
+    if (!file) return;
 
     var reader = new FileReader();
     reader.onload = function(evt) {
-      var datos;
       try {
-        datos = JSON.parse(evt.target.result);
+        _histDatosRestaurar = JSON.parse(evt.target.result);
       } catch(err) {
-        document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Archivo inválido</span>';
+        alert('Archivo JSON inválido');
         return;
       }
 
-      var claves = Object.keys(datos);
-      if (claves.length === 0) {
-        document.getElementById('hist-loading').innerHTML = '<span style="opacity:.5">Sin datos para importar</span>';
-        return;
-      }
+      document.getElementById('chk-restaurar-comandas').checked = false;
+      document.getElementById('chk-borrar-comandas').checked = false;
+      document.getElementById('chk-borrar-comandas').disabled = true;
 
-      var confirmar = confirm('Se importarán ' + claves.length + ' elementos.\n\n¿Continuar?');
-      if (!confirmar) {
-        document.getElementById('hist-loading').innerHTML = '';
-        return;
-      }
+      document.getElementById('chk-restaurar-comandas').onchange = function() {
+        document.getElementById('chk-borrar-comandas').disabled = !this.checked;
+        if (!this.checked) document.getElementById('chk-borrar-comandas').checked = false;
+      };
+      document.getElementById('chk-restaurar-productos').checked = false;
+      document.getElementById('chk-restaurar-clientes').checked = false;
+      document.getElementById('chk-restaurar-terraza').checked = false;
 
-      document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;animation:spin 1s linear infinite">sync</span>Importando…';
-
-      var promises = claves.map(function(key) {
-        var valor = datos[key];
-        return dbFetch('/set/' + key, {
-          method: 'POST',
-          body: typeof valor === 'string' ? valor : JSON.stringify(valor)
-        });
-      });
-
-      Promise.all(promises)
-      .then(function() {
-        document.getElementById('hist-loading').innerHTML = '<span style="color:#50c8a0">✓ importados ' + claves.length + ' elementos</span>';
-        setTimeout(function() {
-          verHistorico();
-        }, 1500);
-      })
-      .catch(function(err) {
-        document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
-      });
+      document.getElementById('hist-restaurar-overlay').classList.add('open');
     };
     reader.readAsText(file);
   };
   input.click();
+}
+
+function restaurarCopiaConfirmar() {
+  var chkComandas = document.getElementById('chk-restaurar-comandas');
+  var chkBorrarComandas = document.getElementById('chk-borrar-comandas');
+  var chkProductos = document.getElementById('chk-restaurar-productos');
+  var chkClientes = document.getElementById('chk-restaurar-clientes');
+  var chkTerraza = document.getElementById('chk-restaurar-terraza');
+
+  var restaurarComandas = chkComandas.checked;
+  var borrarComandas = chkBorrarComandas.checked;
+  var restaurarProductos = chkProductos.checked;
+  var restaurarClientes = chkClientes.checked;
+  var restaurarTerraza = chkTerraza.checked;
+
+  if (!restaurarComandas && !restaurarProductos && !restaurarClientes && !restaurarTerraza) {
+    cerrarHistRestaurarBtn();
+    return;
+  }
+
+  var restaurarPromise;
+
+  if (borrarComandas && restaurarComandas) {
+    restaurarPromise = dbFetch('/keys/*')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var claves = (data.result || []).filter(function(k) {
+          return k.charAt(0) >= '0' && k.charAt(0) <= '9';
+        });
+        return Promise.all(claves.map(function(key) {
+          return dbFetch('/del/' + key, { method: 'POST' });
+        }));
+      })
+      .then(function() {
+        var clavesComandas = Object.keys(_histDatosRestaurar).filter(function(key) {
+          return key.charAt(0) >= '0' && key.charAt(0) <= '9';
+        });
+        return Promise.all(clavesComandas.map(function(key) {
+          var valor = _histDatosRestaurar[key];
+          return dbFetch('/set/' + key, {
+            method: 'POST',
+            body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+          });
+        }));
+      });
+  } else {
+    var promises = [];
+
+    if (restaurarComandas) {
+      Object.keys(_histDatosRestaurar).forEach(function(key) {
+        if (key.charAt(0) >= '0' && key.charAt(0) <= '9') {
+          var valor = _histDatosRestaurar[key];
+          promises.push(dbFetch('/set/' + key, {
+            method: 'POST',
+            body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+          }));
+        }
+      });
+    }
+
+    if (restaurarClientes && _histDatosRestaurar.clientes) {
+      var valor = _histDatosRestaurar.clientes;
+      promises.push(dbFetch('/set/clientes', {
+        method: 'POST',
+        body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+      }));
+    }
+
+    if (restaurarProductos && _histDatosRestaurar.productos) {
+      var valor = _histDatosRestaurar.productos;
+      promises.push(dbFetch('/set/productos', {
+        method: 'POST',
+        body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+      }));
+    }
+
+    if (restaurarTerraza && _histDatosRestaurar.terraza) {
+      var valor = _histDatosRestaurar.terraza;
+      promises.push(dbFetch('/set/terraza', {
+        method: 'POST',
+        body: typeof valor === 'string' ? valor : JSON.stringify(valor)
+      }));
+    }
+
+    restaurarPromise = Promise.all(promises);
+  }
+
+  document.getElementById('hist-restaurar-overlay').classList.remove('open');
+  document.getElementById('hist-loading').style.display = 'flex';
+  document.getElementById('hist-loading').innerHTML = '<span class="material-icons-round" style="font-size:18px;animation:spin 1s linear infinite">sync</span>Restaurando…';
+
+  restaurarPromise
+  .then(function() {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#50c8a0">✓ Restauración completada</span>';
+    setTimeout(function() {
+      verHistorico();
+    }, 1500);
+  })
+  .catch(function(err) {
+    document.getElementById('hist-loading').innerHTML = '<span style="color:#f07070">Error: ' + err.message + '</span>';
+  });
+}
+
+function cerrarHistRestaurarBtn() {
+  document.getElementById('hist-restaurar-overlay').classList.remove('open');
 }
 
 function colapsarHistorico() {

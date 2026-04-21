@@ -185,6 +185,10 @@ html, body {
   cursor: pointer;
 }
 .hist-dropdown-item:hover { background: rgba(255,255,255,.08); }
+.hist-checkbox {
+  display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;
+}
+.hist-checkbox input { width: 18px; height: 18px; accent-color: var(--accent); }
 .placeholder-card {
   background: var(--surface);
   border-radius: var(--radius);

@@ -345,6 +345,27 @@
     </div>
   </div>
 
+  <!-- ── MODAL: RESTAURAR COPIA ── -->
+  <div id="hist-restaurar-overlay" class="pago-overlay" onclick="cerrarHistRestaurarBtn()">
+    <div class="pago-dialog" style="gap:16px" onclick="event.stopPropagation()">
+      <div class="pago-dialog-header">
+        <div class="pago-dialog-icon">📂</div>
+        <div class="pago-dialog-title">¿Qué desea restaurar?</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label class="hist-checkbox"><input type="checkbox" id="chk-restaurar-comandas"> Comandas</label>
+        <label class="hist-checkbox" style="margin-left:24px"><input type="checkbox" id="chk-borrar-comandas" disabled> Eliminar comandas existentes antes de restaurar</label>
+        <label class="hist-checkbox"><input type="checkbox" id="chk-restaurar-productos"> Productos</label>
+        <label class="hist-checkbox"><input type="checkbox" id="chk-restaurar-clientes"> Clientes</label>
+        <label class="hist-checkbox"><input type="checkbox" id="chk-restaurar-terraza"> Terraza</label>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="fab-btn fab-confirm" style="flex:1" onclick="restaurarCopiaConfirmar()">Restaurar</button>
+        <button class="pago-btn pago-btn-cancel" style="flex:1" onclick="cerrarHistRestaurarBtn()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── MODAL: DESGLOSE CLIENTE ── -->
   <div id="desglose-overlay" class="modal-overlay">
     <div class="modal-sheet" id="desglose-sheet" onclick="event.stopPropagation()">
